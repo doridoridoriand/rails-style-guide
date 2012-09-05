@@ -1,63 +1,46 @@
-# Prelude
+# 序曲
 
-> Style is what separates the good from the great. <br/>
+> スタイルとは、偉人から良い所を分離したものである。<br/>
 > -- Bozhidar Batsov
 
-The goal of this guide is to present a set of best practices and style
-prescriptions for Ruby on Rails 3 development. It's a complementary
-guide to the already existing community-driven
-[Ruby coding style guide](https://github.com/bbatsov/ruby-style-guide).
+このガイドのゴールは、Ruby on Rails 3開発のための1セットのベストプラクティスおよびスタイル規則を示すことです。これは、コミュニティー駆動ですでに存在する [Ruby coding style guide](https://github.com/bbatsov/ruby-style-guide) の補足的なガイドです。
 
-While in the guide the section [Testing Rails applications](#testing)
-is after [Developing Rails applications](#developing) I truly believe
-that
-[Behaviour-Driven Development](http://en.wikipedia.org/wiki/Behavior_Driven_Development)
-(BDD) is the best way to develop software. Keep that in mind.
+ガイドの中では「[Railsアプリケーションのテスト](#testing)」は「[Railsアプリケーション開発](#developing)」の後にあります。私は、[振る舞い駆動開発 (BDD)](http://en.wikipedia.org/wiki/Behavior_Driven_Development) がソフトウェアを開発する最良の方法であると本当に信じています。それを覚えておいてください。
 
-Rails is an opinionated framework and this is an opinionated guide. In
-my mind I'm totally certain that
-[RSpec](https://www.relishapp.com/rspec) is superior to Test::Unit,
-[Sass](http://sass-lang.com/) is superior to CSS and
-[Haml](http://haml-lang.com/) ([Slim](http://slim-lang.com/)) is
-superior to Erb. So don't expect to find any Test::Unit, CSS or Erb
-advice in here.
+Railsは信念の強いフレームワークです。そしてこれは信念の強いガイドです。心の中では、[RSpec](https://www.relishapp.com/rspec)がTest::Unitより優れていると完全に確信しています。[Sass](http://sass-lang.com/)はCSSより優れています。そして、[Haml](http://haml-lang.com/) ([Slim](http://slim-lang.com/))はErbより優れています。したがって、Test::Unit、CSS、Erbに関するどんな助言も、この中で見つけることは期待できません。
 
-Some of the advice here is applicable only to Rails 3.1+.
+ここにある助言うちのいくつかは、Rails 3.1以上でのみ適用できます。
 
-You can generate a PDF or an HTML copy of this guide using
-[Transmuter](https://github.com/TechnoGate/transmuter).
+[Transmuter](https://github.com/TechnoGate/transmuter)を使用して、PDFあるいはこのガイドのHTMLコピーを生成することができます。
 
-# Table of Contents
+# 目次
 
-* [Developing Rails applications](#developing-rails-applications)
-    * [Configuration](#configuration)
-    * [Routing](#routing)
-    * [Controllers](#controllers)
-    * [Models](#models)
-    * [Migrations](#migrations)
-    * [Views](#views)
-    * [Assets](#assets)
-    * [Mailers](#mailers)
+* [Railsアプリケーション開発](#developing-rails-applications)
+    * [設定](#configuration)
+    * [ルーティング](#routing)
+    * [コントローラ](#controllers)
+    * [モデル](#models)
+    * [マイグレーション](#migrations)
+    * [ビュー](#views)
+    * [国際化](#internationalization)
+    * [アセット](#assets)
+    * [Mailer](#mailers)
     * [Bundler](#bundler)
-    * [Priceless Gems](#priceless-gems)
-    * [Flawed Gems](#flawed-gems)
-    * [Managing processes](#managing-processes)
-* [Testing Rails applications](#testing-rails-applications)
+    * [有用なgem](#priceless-gems)
+    * [欠陥のgem](#flawed-gems)
+    * [プロセス管理](#managing-processes)
+* [Railsアプリケーションのテスト](#testing-rails-applications)
     * [Cucumber](#cucumber)
     * [RSpec](#rspec)
 
-# Developing Rails applications
+# <a name="developing-rails-applications"> Railsアプリケーション開発
 
-## Configuration
+## <a name="configuration"> 設定
 
-* Put custom initialization code in `config/initializers`. The code in
-  initializers executes on application startup.
-* The initialization code for each gem should be in a separate file
-  with the same name as the gem, for example `carrierwave.rb`,
-  `active_admin.rb`, etc.
-* Adjust accordingly the settings for development, test and production
-  environment (in the corresponding files under `config/environments/`)
-  * Mark additional assets for precompilation (if any):
+* `config/initializers`にカスタム初期化コードを入れてください。initializersの中のコードはアプリケーション起動時に実行されます。
+* 各gemの初期化コードは、gemと同じ名前の個別のファイルにあるはずです。例えば、`carrierwave.rb`、`active_admin.rb`などです。
+* development、test、productionの各環境の設定 (`config/environments/`の下の対応するファイル) に従って調節します。
+  * (もしあれば) プリコンパイルの追加アセットを記します。
 
         ```Ruby
         # config/environments/production.rb
@@ -65,36 +48,33 @@ You can generate a PDF or an HTML copy of this guide using
         config.assets.precompile += %w( rails_admin/rails_admin.css rails_admin/rails_admin.js )
         ```
 
-* Create an additional `staging` environment that closely resembles
-the `production` one.
+* `production`環境に似た、`staging`環境を追加で作成してください。
 
-## Routing
+## <a name="routing"> ルーティング
 
-* When you need to add more actions to a RESTful resource (do you
-  really need them at all?) use `member` and `collection` routes.
+* RESTfulリソース (本当に必要ですか？) に対して、さらにアクションを追加する必要がある場合、`member`および`collection`ルートを使用します。
 
     ```Ruby
-    # bad
+    # 悪い
     get 'subscriptions/:id/unsubscribe'
     resources :subscriptions
 
-    # good
+    # 良い
     resources :subscriptions do
       get 'unsubscribe', :on => :member
     end
 
-    # bad
+    # 悪い
     get 'photos/search'
     resources :photos
 
-    # good
+    # 良い
     resources :photos do
       get 'search', :on => :collection
     end
     ```
 
-* If you need to define multiple `member/collection` routes use the
-  alternative block syntax.
+* 複数の`member/collection`ルートを定義する必要がある場合は、代替ブロック・シンタックスを使用します。
 
     ```Ruby
     resources :subscriptions do
@@ -112,8 +92,7 @@ the `production` one.
     end
     ```
 
-* Use nested routes to express better the relationship between
-  ActiveRecord models.
+* ActiveRecordモデルの関係をよりよく表現するために、入れ子のルートを使用してください。
 
     ```Ruby
     class Post < ActiveRecord::Base
@@ -130,7 +109,7 @@ the `production` one.
     end
     ```
 
-* Use namespaced routes to group related actions.
+* 関連するアクションをグループ化するためにnamespaceを使用してください。
 
     ```Ruby
     namespace :admin do
@@ -140,31 +119,24 @@ the `production` one.
     end
     ```
 
-* Never use the legacy wild controller route. This route will make all
-  actions in every controller accessible via GET requests.
+* 古い記法のワイルド・コントローラ・ルートを使用しないでください。このルートはGETリクエストによってアクセス可能なすべてのコントローラの中ですべてのアクションを生成します。
 
     ```Ruby
-    # very bad
+    # とても悪い
     match ':controller(/:action(/:id(.:format)))'
     ```
 
-## Controllers
+## <a name="controllers"> コントローラ
 
-* Keep the controllers skinny - they should only retrieve data for the
-  view layer and shouldn't contain any business logic (all the
-  business logic should naturally reside in the model).
-* Each controller action should (ideally) invoke only one method other
-  than an initial find or new.
-* Share no more than two instance variables between a controller and a view.
+* コントローラは皮だけの状態を保ってください。これらは単にビュー層のためのデータを取り出すだけのものであるべきであり、ビジネスロジックを含むべきではありません。(すべてのビジネスロジックは、当然モデルに存在するべきです)
+* それぞれのコントローラー・アクションは、初期のfindとnew以外、(理想的には) 1つのメソッドだけを起動するべきです。
+* コントローラーとビューの間の変数の共有は、2つを超えない範囲にしてください。
 
-## Models
+## <a name="models"> モデル
 
-* Introduce non-ActiveRecord model classes freely.
-* Name the models with meaningful (but short) names without
-abbreviations.
-* If you need model objects that support ActiveRecord behavior like
-  validation use the
-  [ActiveAttr](https://github.com/cgriego/active_attr) gem.
+* 非ActiveRecordモデルのクラスは自由に導入してください。
+* モデルには、略語のない意味のある (しかし短い) 名前を付けてください。
+* ActiveRecordのバリデーションのような振る舞いをサポートするモデルオブジェクトが必要な場合は、[ActiveAttr](https://github.com/cgriego/active_attr) gemを使用してください。
 
     ```Ruby
     class Message
@@ -183,21 +155,16 @@ abbreviations.
     end
     ```
 
-    For a more complete example refer to the
-    [RailsCast on the subject](http://railscasts.com/episodes/326-activeattr).
+    より完全な例は [RailsCast on the subject](http://railscasts.com/episodes/326-activeattr) を参照してください。
 
 ### ActiveRecord
 
-* Avoid altering ActiveRecord defaults (table names, primary key, etc)
-  unless you have a very good reason (like a database that's not under
-  your control).
-* Group macro-style methods (`has_many`, `validates`, etc) in the
-  beginning of the class definition.
-* Prefer `has_many :through` to `has_and_belongs_to_many`. Using `has_many
-:through` allows additional attributes and validations on the join model.
+* 非常に十分な理由 (あなたの管理下にないデータベースを使用する場合など) がない限りは、ActiveRecordデフォルト (テーブル名、主キーなど) を変更しないようにしてください。
+* マクロスタイルのメソッド (`has_many`, `validates`, など) はクラス定義の始めにまとめてください。
+* `has_and_belongs_to_many`よりも`has_many :through`を好んでください。`has_many :through`を使うことは、結合モデルに対して追加の属性とバリデーションを許可します。
 
     ```Ruby
-    # using has_and_belongs_to_many
+    # has_and_belongs_to_many を使用
     class User < ActiveRecord::Base
       has_and_belongs_to_many :groups
     end
@@ -206,7 +173,7 @@ abbreviations.
       has_and_belongs_to_many :users
     end
 
-    # prefered way - using has_many :through
+    # 好ましい方法 - has_many :through を使用
     class User < ActiveRecord::Base
       has_many :memberships
       has_many :groups, through: :memberships
@@ -223,18 +190,16 @@ abbreviations.
     end
     ```
 
-* Always use the new
-  ["sexy" validations](http://thelucid.com/2010/01/08/sexy-validation-in-edge-rails-rails-3/).
-* When a custom validation is used more than once or the validation is some regular expression mapping,
-create a custom validator file.
+* 常に新しい ["sexy" validations](http://thelucid.com/2010/01/08/sexy-validation-in-edge-rails-rails-3/) を使用してください。
+* カスタムバリデーションが2度以上使用されるか、バリデーションが正規表現マッチングである場合は、カスタムバリデータファイルを作成してください。
 
     ```Ruby
-    # bad
+    # 悪い
     class Person
       validates :email, format: { with: /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i }
     end
 
-    # good
+    # 良い
     class EmailValidator < ActiveModel::EachValidator
       def validate_each(record, attribute, value)
         record.errors[attribute] << (options[:message] || 'is not a valid email') unless value =~ /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
@@ -246,19 +211,12 @@ create a custom validator file.
     end
     ```
 
-* All custom validators should be moved to a shared gem.
-* Use named scopes freely.
-* When a named scope defined with a lambda and parameters becomes too
-complicated, it is preferable to make a class method instead which serves
-the same purpose of the named scope and returns an
-`ActiveRecord::Relation` object.
-* Beware of the behavior of the `update_attribute` method. It doesn't
-  run the model validations (unlike `update_attributes`) and could easily corrupt the model state.
-* Use user-friendly URLs. Show some descriptive attribute of the model in the URL rather than its `id`.
-There is more than one way to achieve this:
-  * Override the `to_param` method of the model. This method is used by Rails for constructing a URL to the object.
-    The default implementation returns the `id` of the record as a String. It could be overridden to include another
-    human-readable attribute.
+* すべてのカスタムバリデータは共有gemに移動されるべきです。
+* named scopeは自由に使用してください。
+* ラムダとパラメータを使用したnamed scope定義が複雑になる場合、named scopeと同じ目的のために、代わりに`ActiveRecord::Relation`オブジェクトを返すクラスメソッドを作るのは望ましいことです。
+* `update_attribute`メソッドの振る舞いに用心してください。これはモデルバリデーション を実行せず (`update_attributes`と異なる)、容易にモデルの状態を悪くするかもしれません。
+* ユーザー・フレンドリーなURLを使用してください。URLの中ではモデルの`id`ではなく、モデルの記述的な属性を表示してください。このためのいくつかの方法があります。
+  * `to_param`メソッドをオーバーライドしてください。これはオブジェクトへのURLを構築するためにRailsによって使用されます。デフォルト実装では、レコードの`id`を文字列として返します。他の「人間が判読可能な」属性を含めるために、これをオーバーライドすることができます。
 
         ```Ruby
         class Person
@@ -267,10 +225,9 @@ There is more than one way to achieve this:
           end
         end
         ```
-        In order to convert this to a URL-friendly value, `parameterize` should be called on the string. The `id` of the
-        object needs to be at the beginning so that it can be found by the `find` method of ActiveRecord.
+        URLフレンドリーな値に変換するために、文字列の`parameterize`を呼ぶ必要があります。ActiveRecordの`find`メソッドで見つけることができるように、オブジェクトの`id`が始めにある必要があります。
 
-  * Use the `friendly_id` gem. It allows creation of human-readable URLs by using some descriptive attribute of the model instead of its `id`.
+  * `friendly_id` gemを使用してください。これは、その`id`の代わりにモデルの記述的な属性を使用することによって、人間が判読可能なURLを生成できるようにします。
 
         ```Ruby
         class Person
@@ -279,15 +236,11 @@ There is more than one way to achieve this:
         end
         ```
 
-        Check the [gem documentation](https://github.com/norman/friendly_id) for more information about its usage.
+        使い方について、より詳細は [gemドキュメント](https://github.com/norman/friendly_id) を確認してください。
 
 ### ActiveResource
 
-* When the response is in a format different from the existing ones (XML and
-JSON) or some additional parsing of these formats is necessary,
-create your own custom format and use it in the class. The custom format
-should implement the following four methods: `extension`, `mime_type`,
-`encode` and `decode`.
+* レスポンスが既存のもの (XMLとJSON) と異なるフォーマットであるか、これらのフォーマットの付加的な解析が必要な場合、自分のカスタムフォーマットを作成して、クラスの中でそれを使用してください。カスタム形式は次の4つのメソッドを実装するべきです：`extension`, `mime_type`, `encode`, `decode`
 
     ```Ruby
     module ActiveResource
@@ -323,9 +276,7 @@ should implement the following four methods: `extension`, `mime_type`,
     end
     ```
 
-* If the request should be sent without extension, override the `element_path`
-and `collection_path` methods of `ActiveResource::Base` and remove the
-extension part.
+* リクエストが拡張子なしで送られるべきである場合は、`ActiveResource::Base`の`element_path`と`collection_path`メソッドをオーバーライドし、拡張子部分を削除してください。
 
     ```Ruby
     class User < ActiveResource::Base
@@ -343,17 +294,15 @@ extension part.
     end
     ```
 
-    These methods can be overridden also if any other modifications of the
-    URL are needed.
+    さらにURLの他の修正が必要な場合、これらのメソッドをオーバーライドすることができます。
 
-## Migrations
 
-* Keep the `schema.rb` under version control.
-* Use `rake db:schema:load` instead of `rake db:migrate` to initialize
-an empty database.
-* Use `rake db:test:prepare` to update the schema of the test database.
-* Avoid setting defaults in the tables themselves. Use the model layer
-  instead.
+## <a name="migrations"> マイグレーション
+
+* `schema.rb`はバージョン管理下に置いてください。
+* 空のデータベースを初期化するために、`rake db:migrate`の代わりに`rake db:schema:load`を使用してください。
+* テストデータベースのスキーマをアップデートするには`rake db:test:prepare`を使用してください。
+* テーブル自体にデフォルトを設定しないようにしてください。モデル層を代わりに使用してください。
 
     ```Ruby
     def amount
@@ -361,9 +310,7 @@ an empty database.
     end
     ```
 
-    While the use of `self[:attr_name]` is considered fairly idiomatic,
-    you might also consider using the slightly more verbose (and arguably more
-    readable) `read_attribute` instead:
+    `self[:attr_name]`の使用はかなり慣用的だと思いますが、代わりにやや冗長な (そしておそらく、より読みやすい) `read_attribute`の使用を検討してもいいかもしれません：
 
     ```Ruby
     def amount
@@ -371,13 +318,10 @@ an empty database.
     end
     ```
 
-* When writing constructive migrations (adding tables or columns), use
-  the new Rails 3.1 way of doing the migrations - use the `change`
-  method instead of `up` and `down` methods.
-
+* 構造変更的なマイグレーションを書くとき (テーブルやカラムの追加など) の、新しいRails 3.1における方法は、 - `up`、`down`メソッドの代わりに、`change`メソッドを使用することです。
 
     ```Ruby
-    # the old way
+    # 古い方法
     class AddNameToPerson < ActiveRecord::Migration
       def up
         add_column :persons, :name, :string
@@ -388,7 +332,7 @@ an empty database.
       end
     end
 
-    # the new prefered way
+    # 好ましい新しい方法
     class AddNameToPerson < ActiveRecord::Migration
       def change
         add_column :persons, :name, :string
@@ -396,16 +340,13 @@ an empty database.
     end
     ```
 
-## Views
+## <a name="views"> ビュー
 
-* Never call the model layer directly from a view.
-* Never make complex formatting in the views, export the formatting to
-  a method in the view helper or the model.
-* Mitigate code duplication by using partial templates and layouts.
-* Add
-  [client side validation](https://github.com/bcardarella/client_side_validations)
-  for the custom validators. The steps to do this are:
-  * Declare a custom validator which extends `ClientSideValidations::Middleware::Base`
+* ビューからモデル層を直接呼び出さないでください。
+* ビューの中で複雑な体裁出力を作らないでください。ビューヘルパー、またはモデルのメソッドに体裁を出してください。
+* 部分テンプレートやレイアウトを使用してコードの重複を軽減させてください。
+* カスタムバリデータに [client side validation](https://github.com/bcardarella/client_side_validations) を追加してください。このためのステップは次の通りです。
+  * `ClientSideValidations::Middleware::Base`を拡張するカスタムバリデータを宣言します。
 
         ```Ruby
         module ClientSideValidations::Middleware
@@ -422,16 +363,14 @@ an empty database.
         end
         ```
 
-  * Create a new file
-    `public/javascripts/rails.validations.custom.js.coffee` and add a
-    reference to it in your `application.js.coffee` file:
+  * 新しいファイル`public/javascripts/rails.validations.custom.js.coffee`を作り、`application.js.coffee`ファイルに参照を追加します。
 
         ```Ruby
         # app/assets/javascripts/application.js.coffee
         #= require rails.validations.custom
         ```
 
-  * Add your client-side validator:
+  * クライアントサイドバリデータを追加します。
 
         ```Ruby
         #public/javascripts/rails.validations.custom.js.coffee
@@ -444,13 +383,10 @@ an empty database.
             return options.message || 'invalid e-mail format'
         ```
 
-## Internationalization
+## <a name="internationalization"> 国際化
 
-* No strings or other locale specific settings should be used in the views,
-models and controllers. These texts should be moved to the locale files in
-the `config/locales` directory.
-* When the labels of an ActiveRecord model need to be translated,
-use the `activerecord` scope:
+* 文字列や他のロケール固有の設定は、ビュー、モデル、コントローラで使用するべきではありません。これらのテキストは`config/locales`ディレクトリ内のロケールファイルに移動するべきです。
+* ActiveRecordモデルのラベルを翻訳する必要がある場合は、`activerecord`スコープを使用してください：
 
     ```
     en:
@@ -462,30 +398,19 @@ use the `activerecord` scope:
             name: "Full name"
     ```
 
-    Then `User.model_name.human` will return "Member" and
-    `User.human_attribute_name("name")` will return "Full name". These
-    translations of the attributes will be used as labels in the views.
+    `User.model_name.human`は "Member" を返し、`User.human_attribute_name("name")`は "Full name" を返します。これらの属性の翻訳は、ビューのラベルとして使用されます。
 
-* Separate the texts used in the views from translations of ActiveRecord
-attributes. Place the locale files for the models in a folder `models` and
-the texts used in the views in folder `views`.
-  * When organization of the locale files is done with additional
-  directories, these directories must be described in the `application.rb`
-  file in order to be loaded.
+* ActiveRecord属性の翻訳からのビューで使用されるテキストを分離してください。`models`フォルダの中にはモデル、`views`フォルダの中にはビューで使用されるテキスト用のローカルファイルを置いてください。
+  * 追加ディレクトリからのローカルファイルの編成が完了したということは、これらのディレクトリはロードされるために`application.rb`ファイルで定義されているはずです。
 
         ```Ruby
         # config/application.rb
         config.i18n.load_path += Dir[Rails.root.join('config', 'locales', '**', '*.{rb,yml}')]
         ```
 
-* Place the shared localization options, such as date or currency formats, in
-files
-under
-the root of the `locales` directory.
-* Use the short form of the I18n methods: `I18n.t` instead of `I18n.translate`
-and `I18n.l` instead of `I18n.localize`.
-* Use "lazy" lookup for the texts used in views. Let's say we have the
-following structure:
+* `locales`ディレクトリのルート下のファイルに、日付や通貨の書式のような共有される地域化オプションを置いてください。
+* I18nメソッドの短縮形を使用してください。`I18n.translate`の代わりに`I18n.t`。`I18n.localize`の代わりに`I18n.l`です。
+* ビューで使われるテキストに "lazy" ルックアップを使用してください。次のような構造です。
 
     ```
     en:
@@ -494,46 +419,37 @@ following structure:
           title: "User details page"
     ```
 
-    The value for `users.show.title` can be looked up in the template
-    `app/views/users/show.html.haml` like this:
+    `users.show.title`の値は、`app/views/users/show.html.haml`テンプレートで次のように得ることができます。
 
     ```Ruby
     = t '.title'
     ```
 
-* Use the dot-separated keys in the controllers and models instead of
-specifying the `:scope` option. The dot-separated call is easier to read and
-trace the hierarchy.
+* `:scope`オプションを指定する代わりに、コントローラとモデルをドットで区切ったキーを使用してください。ドットで区切った呼び出しは、読みやすく、階層のトレースがより簡単です。
 
     ```Ruby
-    # use this call
+    # 方法
     I18n.t 'activerecord.errors.messages.record_invalid'
 
-    # instead of this
+    # 代わりの方法
     I18n.t :record_invalid, :scope => [:activerecord, :errors, :messages]
     ```
 
-* More detailed information about the Rails i18n can be found in the [Rails
-Guides]
-(http://guides.rubyonrails.org/i18n.html)
+* Rails I18nのより詳細な情報は以下で見つけることができます。[Rails Guides](http://guides.rubyonrails.org/i18n.html)
 
-## Assets
+## <a name="assets"> アセット
 
-Use the [assets pipeline](http://guides.rubyonrails.org/asset_pipeline.html) to leverage organization within
-your application.
+アプリケーション内の構成にてこ入れするために[アセットパイプライン](http://guides.rubyonrails.org/asset_pipeline.html)を使用してください。
 
-* Reserve `app/assets` for custom stylesheets, javascripts, or images.
-* Third party code such as [jQuery](http://jquery.com/) or [bootstrap](http://twitter.github.com/bootstrap/)
-  should be placed in `vendor/assets`.
-* When possible, use gemified versions of assets (e.g. [jquery-rails](https://github.com/rails/jquery-rails)).
+* カスタムのstyleshees, javascripts, imagesのために`app/assets`を使用してください。
+* [jQuery](http://jquery.com/) や [bootstrap](http://twitter.github.com/bootstrap/) のような第三者のコードは`vendor/assets`に置かれるべきです。
+* 可能な場合は、アセットをgem化したバージョンを使用してください。(例：[jquery-rails](https://github.com/rails/jquery-rails))
 
-## Mailers
+## <a name="mailers"> Mailer
 
-* Name the mailers `SomethingMailer`. Without the Mailer suffix it
-  isn't immediately apparent what's a mailer and which views are
-  related to the mailer.
-* Provide both HTML and plain-text view templates.
-* Enable errors raised on failed mail delivery in your development environment. The errors are disabled by default.
+* Mailerの名前は`SomethingMailer`としてください。接尾辞のないMailerでは、どれがMailerか、どのビューがMailerと関係があるか、明白ではありません。
+* HTMLとプレーンテキストの両方のビューテンプレートを提供してください。
+* development環境中でメール配信に失敗した際のエラー発生を有効にしてください。エラーはデフォルトでは無効です。
 
     ```Ruby
     # config/environments/development.rb
@@ -541,8 +457,7 @@ your application.
     config.action_mailer.raise_delivery_errors = true
     ```
 
-* Use `smtp.gmail.com` for SMTP server in the development environment
-  (unless you have local SMTP server, of course).
+* development環境ではSMTPサーバに`smtp.gmail.com`を使用してください。(もちろん、あなたがローカルSMTPサーバを持っていない場合です)
 
     ```Ruby
     # config/environments/development.rb
@@ -553,12 +468,11 @@ your application.
     }
     ```
 
-* Provide default settings for the host name.
+* ホスト名にデフォルト設定を与えてください。
 
     ```Ruby
     # config/environments/development.rb
     config.action_mailer.default_url_options = {host: "#{local_ip}:3000"}
-
 
     # config/environments/production.rb
     config.action_mailer.default_url_options = {host: 'your_site.com'}
@@ -567,28 +481,26 @@ your application.
     default_url_options[:host] = 'your_site.com'
     ```
 
-* If you need to use a link to your site in an email, always use the
-  `_url`, not `_path` methods. The `_url` methods include the host
-  name and the `_path` methods don't.
+* メールの中でサイトへのリンクを使用する必要がある場合は、`_path`メソッドではなく、常に`_url`を使用してください。`_url`メソッドはホスト名を含んでいますが、`_path`メソッドは含んでいません。
 
     ```Ruby
-    # wrong
+    # 間違い
     You can always find more info about this course
     = link_to 'here', url_for(course_path(@course))
 
-    # right
+    # 正しい
     You can always find more info about this course
     = link_to 'here', url_for(course_url(@course))
     ```
 
-* Format the from and to addresses properly. Use the following format:
+* FromとToのアドレスに適切な書式を使ってください。次のような書式を使ってください。
 
     ```Ruby
     # in your mailer class
     default from: 'Your Name <info@your_site.com>'
     ```
 
-* Make sure that the e-mail delivery method for your test environment is set to `test`:
+* test環境のためのメールdelivery methodには`test`が設定されていることを確認してください。
 
     ```Ruby
     # config/environments/test.rb
@@ -596,7 +508,7 @@ your application.
     config.action_mailer.delivery_method = :test
     ```
 
-* The delivery method for development and production should be `smtp`:
+* developmentとproduction環境のためのメールdelivery methodには`smtp`が設定されていることを確認してください。
 
     ```Ruby
     # config/environments/development.rb, config/environments/production.rb
@@ -604,28 +516,14 @@ your application.
     config.action_mailer.delivery_method = :smtp
     ```
 
-* When sending html emails all styles should be inline, as some mail clients
-  have problems with external styles. This however makes them harder to
-  maintain and leads to code duplication. There are two similar gems that
-  transform the styles and put them in the corresponding html tags:
-  [premailer-rails3](https://github.com/fphilipe/premailer-rails3) and
-  [roadie](https://github.com/Mange/roadie).
-
-* Sending emails while generating page response should be avoided. It causes
-  delays in loading of the page and request can timeout if multiple email are
-  send. To overcome this emails can be send in background process with the help
-  of [delayed_job](https://github.com/tobi/delayed_job) gem.
+* いくつかのメールクライアントが外部スタイルの問題を抱えているため、HTMLメールを送るときは、すべてのスタイルがインラインでなければなりません。しかしながら、これはメンテンナンスを困難にし、コードの重複にもつながります。スタイルを変換し、それを対応するHTMLタグに挿入するための、2つの同じようなgemがあります。[premailer-rails3](https://github.com/fphilipe/premailer-rails3) と [roadie](https://github.com/Mange/roadie) です。
+* ページレスポンスを生成する間にメールを送ることは避けるべきです。ページの読み込みに遅延が発生しますし、もし複数のメールが送信されるのなら、リクエストがタイムアウトする場合があります。これを克服するためには、[delayed_job](https://github.com/tobi/delayed_job) gemの助けを借りてバックグラウンドプロセスで送信します。
 
 ## Bundler
 
-* Put gems used only for development or testing in the appropriate group in the Gemfile.
-* Use only established gems in your projects. If you're contemplating
-on including some little-known gem you should do a careful review of
-its source code first.
-* OS-specific gems will by default result in a constantly changing `Gemfile.lock`
-for projects with multiple developers using different operating systems.
-Add all OS X specific gems to a `darwin` group in the Gemfile, and all Linux
-specific gems to a `linux` group:
+* 開発またはテストのみ使用されるgemは、Gemfileの適切なグループの中に置いてください。
+* プロジェクトでは定評のあるgemだけ使用してください。ほとんど知られていないgemを含めることを検討しているのなら、そのソースコードの注意深い調査を最初に行うべきです。
+* OS特有のgemは、異なるOSを使用している複数の開発者と一緒のプロジェクトのために、頻繁に変わる`Gemfile.lock`によって得ます。OS Xの特有のgemをすべてGemfileの中の`darwin`グループに、Linux特有のgemを`linux`グループに加えてください。
 
     ```Ruby
     # Gemfile
@@ -639,198 +537,110 @@ specific gems to a `linux` group:
     end
     ```
 
-    To require the appropriate gems in the right environment, add the
-    following to `config/application.rb`:
+    正しい環境で適切なgemを要求するためには、`config/application.rb`に以下を加えてください。
 
     ```Ruby
     platform = RUBY_PLATFORM.match(/(linux|darwin)/)[0].to_sym
     Bundler.require(platform)
     ```
 
-* Do not remove the `Gemfile.lock` from version control. This is not
-  some randomly generated file - it makes sure that all of your team
-  members get the same gem versions when they do a `bundle install`.
+* バージョン管理から`Gemfile.lock`を取り除かないでください。これは任意に生成されたファイルではありません。- これは`bundle install`した時に、チームメンバーが確実にすべて同じgemバージョンを得るためのものです。
 
-## Priceless Gems
+## <a name="priceless-gems"> 有用なgem
 
-One of the most important programming principles is "Don't reinvent
-the wheel!". If you're faced with a certain task you should always
-look around a bit for existing solutions, before unrolling your
-own. Here's a list of some "priceless" gems (all of them Rails 3.1
-compliant) that are useful in many Rails projects:
+最も重要なプログラミングの法則の1つはこうです。「車輪を再発明するな！」。あるタスクに直面した時には、自分のものを広げる前に、常に既存の解決策を見つけるために周りを見回すべきです。ここにあるリストは、多くのRailsプロジェクトに役立つ「有用な」gemです。(すべてRails 3.1準拠)
 
-* [active_admin](https://github.com/gregbell/active_admin) - With ActiveAdmin
-  the creation of admin interface for your Rails app is child's play. You get a
-  nice dashboard, CRUD UI and lots more. Very flexible and customizable.
-* [capybara](https://github.com/jnicklas/capybara) - Capybara aims to simplify
-  the process of integration testing Rack applications, such as Rails, Sinatra
-  or Merb. Capybara simulates how a real user would interact with a web
-  application. It is agnostic about the driver running your tests and currently
-  comes with Rack::Test and Selenium support built in. HtmlUnit, WebKit and
-  env.js are supported through external gems. Works great in combination with
-  RSpec & Cucumber.
-* [carrierwave](https://github.com/jnicklas/carrierwave) - the ultimate file
-  upload solution for Rails. Support both local and cloud storage for the
-  uploaded files (and many other cool things). Integrates great with
-  ImageMagick for image post-processing.
-* [client_side_validations](https://github.com/bcardarella/client_side_validations) -
-  Fantastic gem that automatically creates JavaScript client-side validations
-  from your existing server-side model validations. Highly recommended!
-* [compass-rails](https://github.com/chriseppstein/compass) - Great gem that
-  adds support for some css frameworks. Includes collection of sass mixins that
-  reduces code of css files and help fight with browser incompatibilities.
-* [cucumber-rails](https://github.com/cucumber/cucumber-rails) - Cucumber is
-  the premium tool to develop feature tests in Ruby. cucumber-rails provides
-  Rails integration for Cucumber.
-* [devise](https://github.com/plataformatec/devise) - Devise is full-featured
-  authentication solution for Rails applications. In most cases it's preferable
-  to use devise to unrolling your custom authentication solution.
-* [fabrication](http://fabricationgem.org/) - a great fixture replacement
-  (editor's choice).
-* [factory_girl](https://github.com/thoughtbot/factory_girl) - an alternative
-  to fabrication. Nice and mature fixture replacement. Spiritual ancestor of
-  fabrication.
-* [faker](http://faker.rubyforge.org/) - handy gem to generate dummy data
-  (names, addresses, etc).
-* [feedzirra](https://github.com/pauldix/feedzirra) - Very fast and flexible
-  RSS/Atom feed parser.
-* [friendly_id](https://github.com/norman/friendly_id) - Allows creation of
-  human-readable URLs by using some descriptive attribute of the model instead
-  of its id.
-* [guard](https://github.com/guard/guard) - fantastic gem that monitors file
-  changes and invokes tasks based on them. Loaded with lots of useful
-  extension. Far superior to autotest and watchr.
-* [haml-rails](https://github.com/indirect/haml-rails) - haml-rails provides
-  Rails integration for Haml.
-* [haml](http://haml-lang.com) - HAML is a concise templating language,
-  considered by many (including yours truly) to be far superior to Erb.
-* [kaminari](https://github.com/amatsuda/kaminari) - Great paginating solution.
-* [machinist](https://github.com/notahat/machinist) - Fixtures aren't fun.
-  Machinist is.
-* [rspec-rails](https://github.com/rspec/rspec-rails) - RSpec is a replacement
-  for Test::MiniTest. I cannot recommend highly enough RSpec. rspec-rails
-  provides Rails integration for RSpec.
-* [simple_form](https://github.com/plataformatec/simple_form) - once you've
-  used simple_form (or formtastic) you'll never want to hear about Rails's
-  default forms. It has a great DSL for building forms and no opinion on
-  markup.
-* [simplecov-rcov](https://github.com/fguillen/simplecov-rcov) - RCov formatter
-  for SimpleCov. Useful if you're trying to use SimpleCov with the Hudson
-  contininous integration server.
-* [simplecov](https://github.com/colszowka/simplecov) - code coverage tool.
-  Unlike RCov it's fully compatible with Ruby 1.9. Generates great reports.
-  Must have!
-* [slim](http://slim-lang.com) - Slim is a concise templating language,
-  considered by many far superior to HAML (not to mention Erb). The only thing
-  stopping me from using Slim massively is the lack of good support in major
-  editors/IDEs. Its performance is phenomenal.
-* [spork](https://github.com/sporkrb/spork) - A DRb server for testing
-  frameworks (RSpec / Cucumber currently) that forks before each run to ensure
-  a clean testing state. Simply put it preloads a lot of test environment and
-  as consequence the startup time of your tests in greatly decreased. Absolute
-  must have!
-* [sunspot](https://github.com/sunspot/sunspot) - SOLR powered full-text search
-  engine.
+* [active_admin](https://github.com/gregbell/active_admin) - ActiveAdminがあれば、Railsアプリにおける管理者インタフェースの作成は子供の遊びのようなものです。素敵なダッシュボード、CRUD UI、その他いろいろ。とても柔軟でカスタマイズ可能です。
+* [capybara](https://github.com/jnicklas/capybara) - Capybaraは、Rails、Sinatra、MerbのようなRackアプリケーションにおける統合テストのプロセスを単純化することを目標としています。CapybaraはリアルユーザーのWebアプリケーションとの対話をシミュレートします。それはテストを実行するドライバーに関して不可知論者で、Rack::Testに付属し、Seleniumをビルトインでサポートしています。HtmlUnit、WebKit、env.jsは外部gemによってサポートされます。RSpecとCucmberとのコンビネーションで素晴らしい仕事をします。
+* [carrierwave](https://github.com/jnicklas/carrierwave) - Railsにおける究極のファイルアップロードソリューション。アップロードファイルはローカルと、クラウドストレージの両方をサポートします。画像の後処理のためにImageMagickと素晴らしく統合します。
+* [client_side_validations](https://github.com/bcardarella/client_side_validations) - サーバーサイドの既存のモデルバリデーションから、自動的にJavaScriptクライアントサイドバリデーションを生成する、素晴らしいgemです。非常にお勧めします！
+* [compass-rails](https://github.com/chriseppstein/compass) - いくつかのCSSフレームワークのサポートを追加する、素晴らしいgem。CSSファイルのコードが削減され、ブラウザ非互換性との戦いを助けるsaas mixinsのコレクションが含まれています。
+* [cucumber-rails](https://github.com/cucumber/cucumber-rails) - Cucumber はRubyで機能テストを開発するプレミアムツールです。cucumber-railsは、RailsへのCucumberの統合を提供します。
+* [devise](https://github.com/plataformatec/devise) - Deviseは、Railsアプリケーションのフル機能の認証ソリューションです。 カスタム認証ソリューションを展開するほとんどの場合、Deviseの使用が適しています。
+* [fabrication](http://fabricationgem.org/) - 素晴らしいfixtureの代替 (editor's choice).
+* [factory_girl](https://github.com/thoughtbot/factory_girl) - fabricationの代わり。とても成熟したfixtureの代替です。fabricationの精神を持っています。
+* [faker](http://faker.rubyforge.org/) - ダミーデータを生成する手軽なgem。(氏名、住所、その他)
+* [feedzirra](https://github.com/pauldix/feedzirra) - とても高速で柔軟なRSS/Atomフィードのパーサー。
+* [friendly_id](https://github.com/norman/friendly_id) - モデルのIDの代わりに記述的な属性を使って、人間が読めるURLを生成します
+* [guard](https://github.com/guard/guard) - ファイルの変更を監視し、それに基づいたタスクを起動する、素晴らしいgemです。多くの有用な拡張が載せられました。自動テストとwatchrよりはるかに優れています。
+* [haml-rails](https://github.com/indirect/haml-rails) - haml-railsは、HamlのRailsへの統合を提供します。
+* [haml](http://haml-lang.com) - HAMLは簡潔なテンプレート言語で、多くの人に (あなたも含まれます) Erbよりはるかに優れいていると考えられています。
+* [kaminari](https://github.com/amatsuda/kaminari) - 素晴らしいページングソリューション。
+* [machinist](https://github.com/notahat/machinist) - fixtureは楽しくありません。mechanistなら。
+* [rspec-rails](https://github.com/rspec/rspec-rails) - RSpecはTest::MiniTestの代替です。私はRSpecを十分に強く推奨することができません。rspec-railsは、RSpecのRailsへの統合を供給します。
+* [simple_form](https://github.com/plataformatec/simple_form) - 一度simple_form (あるいはformtastic) を使用したならば、あなたは決してRailsのデフォルト形式に関して聞かされたくありません。フォームを構築するためにマークアップに対して文句のない素晴らしいDSLを持っています。
+* [simplecov-rcov](https://github.com/fguillen/simplecov-rcov) - SimpleCovのためのRCovフォーマッタ。Hudsonのcontininousな統合サーバーとSimpleCovを使用しようとしているなら有用です。
+* [simplecov](https://github.com/colszowka/simplecov) - コードカバレッジツール。RCovと異なり、Ruby 1.9と完全に互換性をもちます。素晴らしいレポートを生成します。必携!
+* [slim](http://slim-lang.com) - Slimは簡潔なテンプレート言語です。HAMLより優れています (Erbには言及しない)。私が使用するのを止める重くて細いただ1つの理由は、主要なエディタ/IDEのサポートの不足です。そのパフォーマンスは驚異的です。
+* [spork](https://github.com/sporkrb/spork) - フレームワーク (現状、RSpec/Cucumber) をテストするためのDRbサーバです。クリーンなテスト状態を保障するために各々の実行前にフォークします。簡単に言えば、多くのテスト環境を事前ロードします。その結果として、テストの最初の時間が大幅に減少します。絶対に必携。
+* [sunspot](https://github.com/sunspot/sunspot) - SOLRによる全文検索エンジン。
 
-This list is not exhaustive and other gems might be added to it along
-the road. All of the gems on the list are field tested, have active
-development and community and are known to be of good code quality.
+このリストは完全ではありません。また、他のgemは今後加えられるかもしれません。リストのgemはすべてフィールドテストされています。これらすべては活発な開発およびコミュニティ活動をしており、よいコード品質であることが知られています。
 
-## Flawed Gems
+## <a name="flawed-gems">欠陥のgem
 
-This is a list of gems that are either problematic or superseded by
-other gems. You should avoid using them in your projects.
+これは問題があるか、他のgemによって取って代わられるgemのリストです。プロジェクトの中でこれらを使用しないようにするべきです。
 
-* [rmagick](http://rmagick.rubyforge.org/) - this gem is notorious for its memory consumption. Use
-[minimagick](https://github.com/probablycorey/mini_magick) instead.
-* [autotest](http://www.zenspider.com/ZSS/Products/ZenTest/) - old solution for running tests automatically. Far
-inferior to guard and [watchr](https://github.com/mynyml/watchr).
-* [rcov](https://github.com/relevance/rcov) - code coverage tool, not
-  compatible with Ruby 1.9. Use
-  [SimpleCov](https://github.com/colszowka/simplecov) instead.
-* [therubyracer](https://github.com/cowboyd/therubyracer) - the use of
-  this gem in production is strongly discouraged as it uses a very large amount of
-  memory. I'd suggest using
-  [Mustang](https://github.com/nu7hatch/mustang) instead.
+* [rmagick](http://rmagick.rubyforge.org/) - このgemはメモリ消費で悪名高い。代わりに [minimagick](https://github.com/probablycorey/mini_magick) を使用してください。
+* [autotest](http://www.zenspider.com/ZSS/Products/ZenTest/) - テストを自動的に実行するための古いソリューションです。guard と [watchr](https://github.com/mynyml/watchr) よりも遥かに劣っています。
+* [rcov](https://github.com/relevance/rcov) - コードカバレッジツールです。Ruby 1.9と互換性がありません。[SimpleCov](https://github.com/colszowka/simplecov) を使用してください。
+* [therubyracer](https://github.com/cowboyd/therubyracer) - 非常に大量のメモリを使用するので、本番環境でのこのgemの使用には強く反対します。[Mustang](https://github.com/nu7hatch/mustang) の利用を提案します。
 
-This list is also a work in progress. Please, let me know if you know
-other popular, but flawed gems.
+このリストは作成途中です。他にもポピュラーであるが欠陥のあるgemを知っていれば教えてください。
 
-## Managing processes
+## <a name="managing-processes"> プロセス管理
 
-* If your projects depends on various external processes use
-  [foreman](https://github.com/ddollar/foreman) to manage them.
+* プロジェクトが様々な外部プロセスに依存している場合は、それらを管理するために [foreman](https://github.com/ddollar/foreman) を使います。
 
-# Testing Rails applications
+# <a name="testing-rails-applications"> Railsアプリケーションのテスト
 
-The best approach to implementing new features is probably the BDD
-approach. You start out by writing some high level feature tests
-(generally written using Cucumber), then you use these tests to drive
-out the implementation of the feature. First you write view specs for
-the feature and use those specs to create the relevant
-views. Afterwards you create the specs for the controller(s) that will
-be feeding data to the views and use those specs to implement the
-controller. Finally you implement the models specs and the models
-themselves.
+新しい機能を実装するためのの最良のアプローチは、おそらくBDDアプローチです。いくつかのハイレベルの機能テスト (一般にCucumberを使用して書かれる) を書くことにより開始します。そして、機能の実装を洗い出すためにこれらのテストを使用します。始めに機能用のビューのspecを書き、適切なビューを作成するためにそれらのspecを使用します。後でビューにデータを与えて、コントローラを実装するために、それらのspecを使用するコントローラ用のspecを作成します。最後に、モデルspecおよびモデル自身を実装します。
 
-## Cucumber
+## <a name="cucumber"> Cucumber
 
-* Tag your pending scenarios with `@wip` (work in progress).  These
-scenarios will not be taken into account and will not be marked as
-failing.  When finishing the work on a pending scenario and
-implementing the functionality it tests, the tag `@wip` should be
-removed in order to include this scenario in the test suite.
-* Setup your default profile to exclude the scenarios tagged with
-`@javascript`.  They are testing using the browser and disabling them
-is recommended to increase the regular scenarios execution speed.
-* Setup a separate profile for the scenarios marked with `@javascript` tag.
-  * The profiles can be configured in the `cucumber.yml` file.
+* 保留中のシナリオに`@wip` (work in progress: 作業中) タグを付けてください。これらのシナリオは無視され、失敗としてマークされません。保留中のシナリオの作業が完了し、テストするための機能性が実装されたら、テストスイートにこのシナリオを含めるために`@wip`タグを削除します。
+* `@javascript`タグが付いたシナリオを除外するようにデフォルトのプロフィールをセットアップしてください。それらはテストにブラウザを使用します。通常のシナリオの実行速度を上げるために、それらを無効にすることをお勧めします。
+* `@javascript`タグが付けられたシナリオのための別のプロフィールをセットアップしてください。
+  * プロフィールは`cucumber.yml`ファイルで設定することができます。
 
         ```Ruby
         # definition of a profile:
         profile_name: --tags @tag_name
         ```
 
-  * A profile is run with the command:
+  * プロフィールは次のコマンドで実行されます。
 
         ```
         cucumber -p profile_name
         ```
 
-* If using [fabrication](http://fabricationgem.org/) for fixtures
-  replacement, use the predefined
-  [fabrication steps](http://fabricationgem.org/#!cucumber-steps)
-* Do not use the old `web_steps.rb` step definitions!
-[The web steps were removed from the latest version of Cucumber.](http://aslakhellesoy.com/post/11055981222/the-training-wheels-came-off) Their
-usage leads to the creation of verbose scenarios that do not properly
-reflect the application domain.
-* When checking for the presence of an element with visible text
-  (link, button, etc.) check for the text, not the element id. This
-  can detect problems with the i18n.
-* Create separate features for different functionality regarding the same kind of objects:
+* fixtureの代わりに [fabrication](http://fabricationgem.org/) 使用している場合は、あらかじめ定義された [fabrication steps](http://fabricationgem.org/#!cucumber-steps) を使用してください。
+* 古い`web_steps.rb`ステップ定義を使わないでください！[WebステップはCucumberの最新バージョンで削除されています。](http://aslakhellesoy.com/post/11055981222/the-training-wheels-came-off)その使い方は、適切にアプリケーションのドメインを反映しない冗長なシナリオの作成につながります。
+* 要素idではなく、可視のテキスト (リンク、ボタンなど) で要素の存在を調べる場合。これは、i18nに関する問題を見つけることができます。
+* 同じ種類のオブジェクトの異なる機能のために、個別のフィーチャを作ってください：
 
     ```Ruby
-    # bad
+    # 悪い
     Feature: Articles
-    # ... feature  implementation ...
+    # ... フィーチャ実装 ...
 
-    # good
+    # 良い
     Feature: Article Editing
-    # ... feature  implementation ...
+    # ... フィーチャ実装 ...
 
     Feature: Article Publishing
-    # ... feature  implementation ...
+    # ... フィーチャ実装 ...
 
     Feature: Article Search
-    # ... feature  implementation ...
+    # ... フィーチャ実装 ...
 
     ```
 
-* Each feature has three main components
-  * Title
-  * Narrative - a short explanation what the feature is about.
-  * Acceptance criteria - the set of scenarios each made up of individual steps.
-* The most common format is known as the Connextra format.
+* 各々のフィーチャには3つの主成分があります。
+  * タイトル
+  * ナラティブ (物語) - フィーチャについての短い説明。
+  * 合格基準 - 個々のステップから構成されたシナリオのセット。
+* 最も一般的なフォーマットがConnextraフォーマットとして知られています。
 
     ```Ruby
     In order to [benefit] ...
@@ -838,10 +648,9 @@ reflect the application domain.
     Wants to [feature] ...
     ```
 
-This format is the most common but is not required, the narrative can
-be free text depending on the complexity of the feature.
+このフォーマットは最も一般的なものですが、必須ではありません、ナラティブはフィーチャの複雑さに応じて自由なテキストになりえます。
 
-* Use Scenario Outlines freely to keep the scenarios DRY.
+* シナリオのDRYを維持するために、シナリオアウトラインを自由に使用してください。
 
     ```Ruby
     Scenario Outline: User cannot register with invalid e-mail
@@ -854,14 +663,8 @@ be free text depending on the complexity of the feature.
       |invalid email |is not a valid e-mail |
     ```
 
-* The steps for the scenarios are in `.rb` files under the
-`step_definitions` directory. The naming convention for the steps file
-is `[description]_steps.rb`.  The steps can be separated into
-different files based on different criterias. It is possible to have
-one steps file for each feature (`home_page_steps.rb`).  There also
-can be one steps file for all features for a particular object
-(`articles_steps.rb`).
-* Use multiline step arguments to avoid repetition
+* シナリオ用のステップは`step_definitions`ディレクトリの下の`.rb`ファイルにあります。ステップファイルのファイル名命名規則は`[description]_steps.rb`です。ステップは異なる基準に基づいた異なるファイルへ分けることができます。各フィーチャ (`home_page_steps.rb`) のために1ステップのファイルを持つことは可能です。また、特定のオブジェクト(`articles_steps.rb`) のためにすべてのフィーチャの1ステップのファイルがさらにある場合もあります。
+* 繰り返しを回避するために複数行ステップ引数を使用してください。
 
     ```Ruby
     Scenario: User profile
@@ -880,7 +683,7 @@ can be one steps file for all features for a particular object
     end
     ```
 
-* Use compound steps to keep the scenario DRY
+* シナリオのDRYを保つために、複合ステップを使用してください。
 
     ```Ruby
     # ...
@@ -897,16 +700,14 @@ can be one steps file for all features for a particular object
       }
     end
     ```
-* Always use the Capybara negative matchers instead of should_not with positive,
-they will retry the match for given timeout allowing you to test ajax actions.
-[See Capybara's README for more explanation](https://github.com/jnicklas/capybara)
+* 常にshould_not肯定の代わりにCapybaraの否定マッチャーを使用してください。Ajaxアクションをテストすることを可能にし、指定されたタイムアウトでマッチングの再試行を行います。[さらに多くの説明は、CapybaraのREADMEを参照してください。](https://github.com/jnicklas/capybara)
 
-## RSpec
+## <a name="rspec"> RSpec
 
-* Use just one expectation per example.
+* exampleごとに1つの期待値だけを使用してください。
 
     ```Ruby
-    # bad
+    # 悪い
     describe ArticlesController do
       #...
 
@@ -921,7 +722,7 @@ they will retry the match for given timeout allowing you to test ajax actions.
       # ...
     end
 
-    # good
+    # 良い
     describe ArticlesController do
       #...
 
@@ -940,11 +741,11 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* Make heavy use of `describe` and `context`
-* Name the `describe` blocks as follows:
-  * use "description" for non-methods
-  * use pound "#method" for instance methods
-  * use dot ".method" for class methods
+* `describe`と`context`を多用してください。
+* `describe`ブロックの命名は次のようにしてください。
+  * メソッド以外は "description" とする。
+  * メソッドには "#method" 「#」を使う。
+  * クラスメソッドには ".method" 「.」を使う。
 
     ```Ruby
     class Article
@@ -969,38 +770,34 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* Use [fabricators](http://fabricationgem.org/) to create test
-  objects.
-* Make heavy use of mocks and stubs
+* テストオブジェクトの生成には [fabricators](http://fabricationgem.org/) を使用してください。
+* モックとスタブを多用してください。
 
     ```Ruby
-    # mocking a model
+    # モデルをモック
     article = mock_model(Article)
 
-    # stubbing a method
+    # メソッドをスタブ
     Article.stub(:find).with(article.id).and_return(article)
     ```
 
-* When mocking a model, use the `as_null_object` method. It tells the
-  output to listen only for messages we expect and ignore any other
-  messages.
+* モデルをモックする場合、`as_null_object`メソッドを使用してください。これは、期待するメッセージにのみをリスニングし、他のメッセージを無視するように出力に命じます。
 
     ```Ruby
     article = mock_model(Article).as_null_object
     ```
 
-* Use `let` blocks instead of `before(:each)` blocks to create data for
-  the spec examples. `let` blocks get lazily evaluated.
+* exampleのためにデータを作る際は、`before(:each)`ブロックの代わりに`let`ブロックを使用してください。
 
     ```Ruby
-    # use this:
+    # こうしてください
     let(:article) { Fabricate(:article) }
 
-    # ... instead of this:
+    # ... これよりも
     before(:each) { @article = Fabricate(:article) }
     ```
 
-* Use `subject` when possible
+* できれば`subject`を使用してください。
 
     ```Ruby
     describe Article do
@@ -1012,10 +809,10 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* Use `specify` if possible. It is a synonym of `it` but is more readable when there is no docstring.
+* できれば`specify`を使用してください。これは`it`の同意語ですが、docstringがない場合、より読みやすいです。
 
     ```Ruby
-    # bad
+    # 悪い
     describe Article do
       before { @article = Fabricate(:article) }
 
@@ -1024,17 +821,17 @@ they will retry the match for given timeout allowing you to test ajax actions.
       end
     end
 
-    # good
+    # 良い
     describe Article do
       let(:article) { Fabricate(:article) }
       specify { article.should_not be_published }
     end
     ```
 
-* Use `its` when possible
+* できれば`its`を使用してください。
 
     ```Ruby
-    # bad
+    # 悪い
     describe Article do
       subject { Fabricate(:article) }
 
@@ -1043,25 +840,20 @@ they will retry the match for given timeout allowing you to test ajax actions.
       end
     end
 
-    # good
+    # 良い
     describe Article do
       subject { Fabricate(:article) }
       its(:creation_date) { should == Date.today }
     end
     ```
 
-### Views
+### ビュー
 
-* The directory structure of the view specs `spec/views` matches the
-  one in `app/views`. For example the specs for the views in
-  `app/views/users` are placed in `spec/views/users`.
-* The naming convention for the view specs is adding `_spec.rb` to the
-  view name, for example the view `_form.html.haml` has a
-  corresponding spec `_form.html.haml_spec.rb`.
-* `spec_helper.rb` need to be required in each view spec file.
-* The outer `describe` block uses the path to the view without the
-  `app/views` part. This is used by the `render` method when it is
-  called without arguments.
+* ビューのspec`spec/views`のディレクトリ構造は、`app/views`の中のものと一致します。
+例えば、`app/views/users`の中のspecは`spec/views/users`に置かれます。
+* ビューのspecの命名規則はビューの名前に`_spec.rb`を視界名に加えたものです。例えば、ビュー`_form.html.haml`には対応するspec`_form.html.haml_spec.rb`があります。
+* `spec_helper.rb`は各ビューspecファイルの中で要求されるために必要です。
+* 外側の`describe`ブロックには、`app/views`なしのビューへのパスを使用します。引数なしで呼ばれた場合、`render`メソッドによって使用されます。
 
     ```Ruby
     # spec/views/articles/new.html.haml_spec.rb
@@ -1072,10 +864,8 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* Always mock the models in the view specs. The purpose of the view is
-  only to display information.
-* The method `assign` supplies the instance variables which the view
-  uses and are supplied by the controller.
+* ビューspec中では常にモデルをモックしてください。ビューの目的は情報を単に表示することだけです。
+* `assign`メソッドは、コントローラーによって供給されビューが使用する変数を供給します。
 
     ```Ruby
     # spec/views/articles/edit.html.haml_spec.rb
@@ -1095,21 +885,19 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* Prefer the capybara negative selectors over should_not with the positive.
+* should_not肯定よりもCapybaraの否定セレクタを使ってください。
 
     ```Ruby
-    # bad
+    # 悪い
     page.should_not have_selector('input', type: 'submit')
     page.should_not have_xpath('tr')
 
-    # good
+    # 良い
     page.should have_no_selector('input', type: 'submit')
     page.should have_no_xpath('tr')
     ```
 
-* When a view uses helper methods, these methods need to be
-  stubbed. Stubbing the helper methods is done on the `template`
-  object:
+* ビューがヘルパーメソッドを使用する場合、これらのメソッドをスタブする必要があります。ヘルパーメソッドのスタブは`template`オブジェクト上で行われます。
 
     ```Ruby
     # app/helpers/articles_helper.rb
@@ -1136,15 +924,15 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* The helpers specs are separated from the view specs in the `spec/helpers` directory.
+* ヘルパーのspecはビューspecから分けられ、`spec/helpers`ディレクトリに置かれます。
 
-### Controllers
+### コントローラ
 
-* Mock the models and stub their methods. Testing the controller should not depend on the model creation.
-* Test only the behaviour the controller should be responsible about:
-  * Execution of particular methods
-  * Data returned from the action - assigns, etc.
-  * Result from the action - template render, redirect, etc.
+* モデルをモックしてメソッドをスタブしてください。コントローラーのテストはモデル生成に左右されるべきではありません。
+* コントローラーが責任を負うべき振る舞いだけをテストしてください：
+  * 特別なメソッドを実行してください。
+  * アクションから返されたデータ - assigns、など
+  * アクションからの結果 - template、render、redirect、など
 
         ```Ruby
         # Example of a commonly used controller spec
@@ -1179,7 +967,7 @@ they will retry the match for given timeout allowing you to test ajax actions.
         end
         ```
 
-* Use context when the controller action has different behaviour depending on the received params.
+* アクションが受信パラメータに応じて異なる振る舞いをする場合、contextを使用してください。
 
     ```Ruby
     # A classic example for use of contexts in a controller spec is creation or update when the object saves successfully or not.
@@ -1231,12 +1019,12 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-### Models
+### モデル
 
-* Do not mock the models in their own specs.
-* Use fabrication to make real objects.
-* It is acceptable to mock other models or child objects.
-* Create the model for all examples in the spec to avoid duplication.
+* specではモデルをモックしないでください。
+* 本物のオブジェクトを作るためにfabricationを使用してください。
+* 他のモデルや子オブジェクトをモックすることは容認できます。
+* 重複を避けるために、specにすべてのexampleのためのモデルを作成してください。
 
     ```Ruby
     describe Article
@@ -1244,7 +1032,7 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* Add an example ensuring that the fabricated model is valid.
+* 作ったモデルが有効であることを保証するexampleを加えてください。
 
     ```Ruby
     describe Article
@@ -1254,12 +1042,10 @@ they will retry the match for given timeout allowing you to test ajax actions.
     end
     ```
 
-* When testing validations, use `have(x).errors_on` to specify the attibute
-which should be validated. Using `be_valid` does not guarantee that the problem
- is in the intended attribute.
+* バリデーションをテストする場合、検証する必要がある属性を指定するには`have(x).errors_on`を使用してください。`be_valid`の使用は、問題が意図した属性にあることを保証するものではありません。
 
     ```Ruby
-    # bad
+    # 悪い
     describe '#title'
       it 'is required' do
         article.title = nil
@@ -1267,7 +1053,7 @@ which should be validated. Using `be_valid` does not guarantee that the problem
       end
     end
 
-    # prefered
+    # 好ましい
     describe '#title'
       it 'is required' do
         article.title = nil
@@ -1276,7 +1062,7 @@ which should be validated. Using `be_valid` does not guarantee that the problem
     end
     ```
 
-* Add a separate `describe` for each attribute which has validations.
+* バリデーションされる各属性ごとに個別の`describe`を追加してください。
 
     ```Ruby
     describe Article
@@ -1289,7 +1075,7 @@ which should be validated. Using `be_valid` does not guarantee that the problem
     end
     ```
 
-* When testing uniqueness of a model attribute, name the other object `another_object`.
+* モデル属性の一意性をテストするときは、他方のオブジェクトに`another_object`という名前を付けてください。
 
     ```Ruby
     describe Article
@@ -1302,14 +1088,14 @@ which should be validated. Using `be_valid` does not guarantee that the problem
     end
     ```
 
-### Mailers
+### Mailer
 
-* The model in the mailer spec should be mocked. The mailer should not depend on the model creation.
-* The mailer spec should verify that:
-  * the subject is correct
-  * the receiver e-mail is correct
-  * the e-mail is sent to the right e-mail address
-  * the e-mail contains the required information
+Mailer specの中のモデルはモックされるべきです。Mailerはモデル生成に依存するべきではありません。
+* Mailer specは以下のことを確認する必要があります：
+  * 見出しが正しい。
+  * 受取人のE-mailアドレスが正しい。
+  * メールが正しいE-mailアドレスに送信された。
+  * メールには必要な情報が含まれている。
 
      ```Ruby
      describe SubscriberMailer
@@ -1329,10 +1115,9 @@ which should be validated. Using `be_valid` does not guarantee that the problem
      end
      ```
 
-### Uploaders
+### アップローダー
 
-* What we can test about an uploader is whether the images are resized correctly.
-Here is a sample spec of a [carrierwave](https://github.com/jnicklas/carrierwave) image uploader:
+* アップローダーに関してテストすることができるものは、画像が正しくリサイズされるかどうかです。ここでは [carrierwave](https://github.com/jnicklas/carrierwave) 画像アップローダーのサンプルを示します。
 
     ```Ruby
 
@@ -1376,29 +1161,20 @@ Here is a sample spec of a [carrierwave](https://github.com/jnicklas/carrierwave
 
     ```
 
-# Further Reading
+# 参考文献
 
-There are a few excellent resources on Rails style, that you should
-consider if you have time to spare:
+Railsのスタイルには優れたリソースがあります。時間があるなら検討してみてください。
 
 * [The Rails 3 Way](http://tr3w.com/)
 * [Ruby on Rails Guides](http://guides.rubyonrails.org/)
 * [The RSpec Book](http://pragprog.com/book/achbd/the-rspec-book)
 
-# Contributing
+# 貢献
 
-Nothing written in this guide is set in stone. It's my desire to work
-together with everyone interested in Rails coding style, so that we could
-ultimately create a resource that will be beneficial to the entire Ruby
-community.
+このガイドの中で書かれた何も石の中でセットされていません。これはRailsコーディングスタイルに興味を持っている皆と一緒に働きたいという私の願望です。だから私たちはRubyコミュニティ全体に有益となるリソースを作成することができました。
 
-Feel free to open tickets or send pull requests with improvements. Thanks in
-advance for your help!
+改善のためにチケットやPull Requestを自由に送ってください。あなたの助力に感謝します！
 
 # Spread the Word
 
-A community-driven style guide is of little use to a community that
-doesn't know about its existence. Tweet about the guide, share it with
-your friends and colleagues. Every comment, suggestion or opinion we
-get makes the guide just a little bit better. And we want to have the
-best possible guide, don't we?
+コミュニティー駆動のスタイルガイドは、その存在を知らないコミュニティーにほとんど役に立ちません。ガイドに関してツイートして、友達や同僚と共有してください。私たちが得るすべてのコメントや提案、意見はガイドをわずかにより良くします。そして私たちはできるだけ最良のガイドを持ちたいですよね。
