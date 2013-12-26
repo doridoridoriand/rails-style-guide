@@ -1,17 +1,22 @@
 # 序曲
 
-> スタイルとは、偉人から良い所を分離したものである。<br/>
-> -- Bozhidar Batsov
+> 役割モデルが重要なのだ。<br/>
+> -- アレックス・マーフィー巡査 / ロボコップ
 
-このガイドのゴールは、Ruby on Rails 3開発のための1セットのベストプラクティスおよびスタイル規則を示すことです。これは、コミュニティー駆動ですでに存在する [Ruby coding style guide](https://github.com/bbatsov/ruby-style-guide) の補足的なガイドです。
+このガイドのゴールは、Ruby on Rails 3と4開発のための1セットのベストプラクティスおよびスタイル規則を示すことです。これは、コミュニティー駆動ですでに存在する [Ruby coding style guide](https://github.com/bbatsov/ruby-style-guide) の補足的なガイドです。
 
-ガイドの中では「[Railsアプリケーションのテスト](#testing)」は「[Railsアプリケーション開発](#developing)」の後にあります。私は、[振る舞い駆動開発 (BDD)](http://en.wikipedia.org/wiki/Behavior_Driven_Development) がソフトウェアを開発する最良の方法であると本当に信じています。それを覚えておいてください。
+ガイドの中では「[Railsアプリケーションのテスト](#testing-rails-applications)」は「[Railsアプリケーション開発](#developing-rails-applications)」の後にあります。私は、[振る舞い駆動開発 (BDD)](http://en.wikipedia.org/wiki/Behavior_Driven_Development) がソフトウェアを開発する最良の方法であると本当に信じています。それを覚えておいてください。
 
 Railsは信念の強いフレームワークです。そしてこれは信念の強いガイドです。心の中では、[RSpec](https://www.relishapp.com/rspec)がTest::Unitより優れていると完全に確信しています。[Sass](http://sass-lang.com/)はCSSより優れています。そして、[Haml](http://haml-lang.com/) ([Slim](http://slim-lang.com/))はErbより優れています。したがって、Test::Unit、CSS、Erbに関するどんな助言も、この中で見つけることは期待できません。
 
 ここにある助言うちのいくつかは、Rails 3.1以上でのみ適用できます。
 
 [Transmuter](https://github.com/TechnoGate/transmuter)を使用して、PDFあるいはこのガイドのHTMLコピーを生成することができます。
+
+このガイドには次の言語の翻訳版があります。
+
+* [中国語簡体字](https://github.com/JuanitoFatas/rails-style-guide/blob/master/README-zhCN.md)
+* [中国語繁体字](https://github.com/JuanitoFatas/rails-style-guide/blob/master/README-zhTW.md)
 
 # 目次
 
@@ -38,7 +43,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 ## <a name="configuration"> 設定
 
 * `config/initializers`にカスタム初期化コードを入れてください。initializersの中のコードはアプリケーション起動時に実行されます。
-* 各gemの初期化コードは、gemと同じ名前の個別のファイルにあるはずです。例えば、`carrierwave.rb`、`active_admin.rb`などです。
+* 各gemの初期化コードは、gemと同じ名前の個別のファイルを維持してください。例えば、`carrierwave.rb`、`active_admin.rb`などです。
 * development、test、productionの各環境の設定 (`config/environments/`の下の対応するファイル) に従って調節します。
   * (もしあれば) プリコンパイルの追加アセットを記します。
 
@@ -48,6 +53,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
         config.assets.precompile += %w( rails_admin/rails_admin.css rails_admin/rails_admin.js )
         ```
 
+* `config/application.rb` では、すべての環境に適用可能な設定をしてください。
 * `production`環境に似た、`staging`環境を追加で作成してください。
 
 ## <a name="routing"> ルーティング
@@ -61,7 +67,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
     # 良い
     resources :subscriptions do
-      get 'unsubscribe', :on => :member
+      get 'unsubscribe', on: :member
     end
 
     # 悪い
@@ -70,7 +76,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
     # 良い
     resources :photos do
-      get 'search', :on => :collection
+      get 'search', on: :collection
     end
     ```
 
@@ -126,6 +132,11 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     match ':controller(/:action(/:id(.:format)))'
     ```
 
+どんなルートも定義するためにXXXを使用しないでください。
+それはレール4から取り除かれます。
+
+* どのようなルート定義でも`match`を使用しないでください。これはRails 4で廃止されました。
+
 ## <a name="controllers"> コントローラ
 
 * コントローラは皮だけの状態を保ってください。これらは単にビュー層のためのデータを取り出すだけのものであるべきであり、ビジネスロジックを含むべきではありません。(すべてのビジネスロジックは、当然モデルに存在するべきです)
@@ -149,9 +160,9 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
       attr_accessible :name, :email, :content
 
-      validates_presence_of :name
-      validates_format_of :email, :with => /^[-a-z0-9_+\.]+\@([-a-z0-9]+\.)+[a-z0-9]{2,4}$/i
-      validates_length_of :content, :maximum => 500
+      validates :name, presence: true
+      validates :email, format: { with: /\A[-a-z0-9_+\.]+\@([-a-z0-9]+\.)+[a-z0-9]{2,4}\z/i }
+      validates :content, length: { maximum: 500 }
     end
     ```
 
@@ -160,7 +171,52 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 ### ActiveRecord
 
 * 非常に十分な理由 (あなたの管理下にないデータベースを使用する場合など) がない限りは、ActiveRecordデフォルト (テーブル名、主キーなど) を変更しないようにしてください。
+
+    ```Ruby
+    # 悪い - スキーマを修正できるのなら、このようにしないでください。
+    class Transaction < ActiveRecord::Base
+      self.table_name = 'order'
+      ...
+    end
+    ```
+
 * マクロスタイルのメソッド (`has_many`, `validates`, など) はクラス定義の始めにまとめてください。
+
+    ```Ruby
+    class User < ActiveRecord::Base
+      # デフォルトスコープは最初に（あれば）
+      default_scope { where(active: true) }
+
+      # 続いて定数
+      GENDERS = %w(male female)
+
+      # その後attr関係のマクロを置きます
+      attr_accessor :formatted_date_of_birth
+
+      attr_accessible :login, :first_name, :last_name, :email, :password
+
+      # 関連マクロが続きます
+      belongs_to :country
+
+      has_many :authentications, dependent: :destroy
+
+      # そしてバリデーションマクロ
+      validates :email, presence: true
+      validates :username, presence: true
+      validates :username, uniqueness: { case_sensitive: false }
+      validates :username, format: { with: /\A[A-Za-z][A-Za-z0-9._-]{2,19}\z/ }
+      validates :password, format: { with: /\A\S{8,128}\z/, allow_nil: true}
+
+      # 次にコールバックです
+      before_save :cook
+      before_save :update_username_lower
+
+      # その他のマクロ（deviseなど）はコールバックの後に置かれるべきです
+
+      ...
+    end
+    ```
+
 * `has_and_belongs_to_many`よりも`has_many :through`を好んでください。`has_many :through`を使うことは、結合モデルに対して追加の属性とバリデーションを許可します。
 
     ```Ruby
@@ -190,31 +246,93 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     end
     ```
 
+* `read_attribute(:attribute)`よりも`self[:attribute]`を好んでください。
+
+    ```Ruby
+    # 悪い
+    def amount
+      read_attribute(:amount) * 100
+    end
+
+    # 良い
+    def amount
+      self[:amount] * 100
+    end
+    ```
+
 * 常に新しい ["sexy" validations](http://thelucid.com/2010/01/08/sexy-validation-in-edge-rails-rails-3/) を使用してください。
+
+    ```Ruby
+    # 悪い
+    validates_presence_of :email
+
+    # 良い
+    validates :email, presence: true
+    ```
+
 * カスタムバリデーションが2度以上使用されるか、バリデーションが正規表現マッチングである場合は、カスタムバリデータファイルを作成してください。
 
     ```Ruby
     # 悪い
     class Person
-      validates :email, format: { with: /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i }
+      validates :email, format: { with: /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i }
     end
 
     # 良い
     class EmailValidator < ActiveModel::EachValidator
       def validate_each(record, attribute, value)
-        record.errors[attribute] << (options[:message] || 'is not a valid email') unless value =~ /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
+        record.errors[attribute] << (options[:message] || 'is not a valid email') unless value =~ /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i
       end
     end
 
     class Person
       validates :email, email: true
     end
+
+* カスタムバリデータは`app/validators`に置いてください。
+* あなたが複数の関連するアプリケーションをメンテンスしているか、バリデータが十分に一般的であるならば、共有されるgemへカスタムバリデータを抽出することを検討してください。
+* named scopeは自由に使用してください。
+
+    ```Ruby
+    class User < ActiveRecord::Base
+      scope :active, -> { where(active: true) }
+      scope :inactive, -> { where(active: false) }
+
+      scope :with_orders, -> { joins(:orders).select('distinct(users.id)') }
+    end
     ```
 
-* すべてのカスタムバリデータは共有gemに移動されるべきです。
-* named scopeは自由に使用してください。
-* ラムダとパラメータを使用したnamed scope定義が複雑になる場合、named scopeと同じ目的のために、代わりに`ActiveRecord::Relation`オブジェクトを返すクラスメソッドを作るのは望ましいことです。
-* `update_attribute`メソッドの振る舞いに用心してください。これはモデルバリデーション を実行せず (`update_attributes`と異なる)、容易にモデルの状態を悪くするかもしれません。
+* 遅延初期化のためにnamed scopeを`lambdas`で包んでください。(Rails 3では単なる処方箋ですが、Rails 4では必須です。)
+
+    ```Ruby
+    # 悪い
+    class User < ActiveRecord::Base
+      scope :active, where(active: true)
+      scope :inactive, where(active: false)
+
+      scope :with_orders, joins(:orders).select('distinct(users.id)')
+    end
+
+    # 良い
+    class User < ActiveRecord::Base
+      scope :active, -> { where(active: true) }
+      scope :inactive, -> { where(active: false) }
+
+      scope :with_orders, -> { joins(:orders).select('distinct(users.id)') }
+    end
+    ```
+
+* ラムダとパラメータを使用したnamed scope定義が複雑になる場合、named scopeと同じ目的のために、代わりに`ActiveRecord::Relation`オブジェクトを返すクラスメソッドを作るのは望ましいことです。恐らくこのようにさらに単純なscopeを定義することができます。
+
+    ```Ruby
+    class User < ActiveRecord::Base
+      def self.with_orders
+        joins(:orders).select('distinct(users.id)')
+      end
+    end
+    ```
+
+* `update_attribute`メソッドの振る舞いに用心してください。これはモデルバリデーションを実行せず (`update_attributes`と異なる)、容易にモデルの状態を悪くするかもしれません。このメソッドは最終的にRails 3.2.7で非推奨となり、Rails 4では存在しません。
 * ユーザー・フレンドリーなURLを使用してください。URLの中ではモデルの`id`ではなく、モデルの記述的な属性を表示してください。このためのいくつかの方法があります。
   * `to_param`メソッドをオーバーライドしてください。これはオブジェクトへのURLを構築するためにRailsによって使用されます。デフォルト実装では、レコードの`id`を文字列として返します。他の「人間が判読可能な」属性を含めるために、これをオーバーライドすることができます。
 
@@ -238,150 +356,55 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
         使い方について、より詳細は [gemドキュメント](https://github.com/norman/friendly_id) を確認してください。
 
-### ActiveResource
-
-* レスポンスが既存のもの (XMLとJSON) と異なるフォーマットであるか、これらのフォーマットの付加的な解析が必要な場合、自分のカスタムフォーマットを作成して、クラスの中でそれを使用してください。カスタム形式は次の4つのメソッドを実装するべきです：`extension`, `mime_type`, `encode`, `decode`
-
-    ```Ruby
-    module ActiveResource
-      module Formats
-        module Extend
-          module CSVFormat
-            extend self
-
-            def extension
-              'csv'
-            end
-
-            def mime_type
-              'text/csv'
-            end
-
-            def encode(hash, options = nil)
-              # Encode the data in the new format and return it
-            end
-
-            def decode(csv)
-              # Decode the data from the new format and return it
-            end
-          end
-        end
-      end
-    end
-
-    class User < ActiveResource::Base
-      self.format = ActiveResource::Formats::Extend::CSVFormat
-
-      ...
-    end
-    ```
-
-* リクエストが拡張子なしで送られるべきである場合は、`ActiveResource::Base`の`element_path`と`collection_path`メソッドをオーバーライドし、拡張子部分を削除してください。
-
-    ```Ruby
-    class User < ActiveResource::Base
-      ...
-
-      def self.collection_path(prefix_options = {}, query_options = nil)
-        prefix_options, query_options = split_options(prefix_options) if query_options.nil?
-        "#{prefix(prefix_options)}#{collection_name}#{query_string(query_options)}"
-      end
-
-      def self.element_path(id, prefix_options = {}, query_options = nil)
-        prefix_options, query_options = split_options(prefix_options) if query_options.nil?
-        "#{prefix(prefix_options)}#{collection_name}/#{URI.parser.escape id.to_s}#{query_string(query_options)}"
-      end
-    end
-    ```
-
-    さらにURLの他の修正が必要な場合、これらのメソッドをオーバーライドすることができます。
-
-
 ## <a name="migrations"> マイグレーション
 
-* `schema.rb`はバージョン管理下に置いてください。
+* `schema.rb` (または`structure.sql`)はバージョン管理下に置いてください。
 * 空のデータベースを初期化するために、`rake db:migrate`の代わりに`rake db:schema:load`を使用してください。
 * テストデータベースのスキーマをアップデートするには`rake db:test:prepare`を使用してください。
 * テーブル自体にデフォルトを設定しないようにしてください。モデル層を代わりに使用してください。
+* アプリケーション層での代わりに、マイグレーションでのデフォルト値を強制してください。
 
     ```Ruby
+    # 悪い - アプリケーションで強制したデフォルト値
     def amount
       self[:amount] or 0
     end
     ```
 
-    `self[:attr_name]`の使用はかなり慣用的だと思いますが、代わりにやや冗長な (そしておそらく、より読みやすい) `read_attribute`の使用を検討してもいいかもしれません：
+    Rails上でのみデフォルトを設定する手法は、多くのRails開発者によって提案されましたが、脆弱にデータを残す多くのアプリケーションのバグに対して非常に脆いアプローチです。
+    そのようにRailsのアプリケーションからのデータの整合性を課すことは、ほとんどの普通でないアプリが他のアプリケーションとデータベースを共有することを考慮することは不可能です。
 
-    ```Ruby
-    def amount
-      read_attribute(:amount) or 0
-    end
-    ```
+* 外部キー制約を強制してください。ActiveRecordはネイティブにはサポートしていませんが、[schema_plus](https://github.com/lomba/schema_plus) や [foreigner](https://github.com/matthuhiggins/foreigner)のようないくつかの素晴らしいサードパーティのgemsがあります。
 
 * 構造変更的なマイグレーションを書くとき (テーブルやカラムの追加など) の、新しいRails 3.1における方法は、 - `up`、`down`メソッドの代わりに、`change`メソッドを使用することです。
 
     ```Ruby
     # 古い方法
-    class AddNameToPerson < ActiveRecord::Migration
+    class AddNameToPeople < ActiveRecord::Migration
       def up
-        add_column :persons, :name, :string
+        add_column :people, :name, :string
       end
 
       def down
-        remove_column :person, :name
+        remove_column :people, :name
       end
     end
 
     # 好ましい新しい方法
-    class AddNameToPerson < ActiveRecord::Migration
+    class AddNameToPeople < ActiveRecord::Migration
       def change
-        add_column :persons, :name, :string
+        add_column :people, :name, :string
       end
     end
     ```
+
+* マイグレーションではモデルクラスを使用しないでください。モデルクラスは絶えず進化します。将来のマイグレーションのあるポイントで、変更されたモデルを使用したことが原因で停止する場合があります。
 
 ## <a name="views"> ビュー
 
 * ビューからモデル層を直接呼び出さないでください。
 * ビューの中で複雑な体裁出力を作らないでください。ビューヘルパー、またはモデルのメソッドに体裁を出してください。
 * 部分テンプレートやレイアウトを使用してコードの重複を軽減させてください。
-* カスタムバリデータに [client side validation](https://github.com/bcardarella/client_side_validations) を追加してください。このためのステップは次の通りです。
-  * `ClientSideValidations::Middleware::Base`を拡張するカスタムバリデータを宣言します。
-
-        ```Ruby
-        module ClientSideValidations::Middleware
-          class Email < Base
-            def response
-              if request.params[:email] =~ /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
-                self.status = 200
-              else
-                self.status = 404
-              end
-              super
-            end
-          end
-        end
-        ```
-
-  * 新しいファイル`public/javascripts/rails.validations.custom.js.coffee`を作り、`application.js.coffee`ファイルに参照を追加します。
-
-        ```Ruby
-        # app/assets/javascripts/application.js.coffee
-        #= require rails.validations.custom
-        ```
-
-  * クライアントサイドバリデータを追加します。
-
-        ```Ruby
-        #public/javascripts/rails.validations.custom.js.coffee
-        clientSideValidations.validators.remote['email'] = (element, options) ->
-          if $.ajax({
-            url: '/validators/email.json',
-            data: { email: element.val() },
-            async: false
-          }).status == 404
-            return options.message || 'invalid e-mail format'
-        ```
 
 ## <a name="internationalization"> 国際化
 
@@ -442,8 +465,10 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 アプリケーション内の構成にてこ入れするために[アセットパイプライン](http://guides.rubyonrails.org/asset_pipeline.html)を使用してください。
 
 * カスタムのstyleshees, javascripts, imagesのために`app/assets`を使用してください。
+* あなたが所有するライブラリには`lib/assets`を使用してください。アプリケーションのスコープに入りません。
 * [jQuery](http://jquery.com/) や [bootstrap](http://twitter.github.com/bootstrap/) のような第三者のコードは`vendor/assets`に置かれるべきです。
-* 可能な場合は、アセットをgem化したバージョンを使用してください。(例：[jquery-rails](https://github.com/rails/jquery-rails))
+* 可能な場合は、アセットをgem化したバージョンを使用してください。(例：[jquery-rails](https://github.com/rails/jquery-rails), [jquery-ui-rails](https://github.com/joliss/jquery-ui-rails), [bootstrap-sass](https://github.com/thomas-mcdonald/bootstrap-sass), [zurb-foundation](https://github.com/zurb/foundation)).
+)
 
 ## <a name="mailers"> Mailer
 
@@ -459,11 +484,14 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
 * development環境ではSMTPサーバに`smtp.gmail.com`を使用してください。(もちろん、あなたがローカルSMTPサーバを持っていない場合です)
 
+* development環境では [Mailcatcher](https://github.com/sj26/mailcatcher) のようなローカルSMTPサーバを使用してください。
+
     ```Ruby
     # config/environments/development.rb
 
     config.action_mailer.smtp_settings = {
-      address: 'smtp.gmail.com',
+      address: 'localhost',
+      port: 1025,
       # more settings
     }
     ```
@@ -472,10 +500,10 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
     ```Ruby
     # config/environments/development.rb
-    config.action_mailer.default_url_options = {host: "#{local_ip}:3000"}
+    config.action_mailer.default_url_options = { host: "#{local_ip}:3000" }
 
     # config/environments/production.rb
-    config.action_mailer.default_url_options = {host: 'your_site.com'}
+    config.action_mailer.default_url_options = { host: 'your_site.com' }
 
     # in your mailer class
     default_url_options[:host] = 'your_site.com'
@@ -516,8 +544,8 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     config.action_mailer.delivery_method = :smtp
     ```
 
-* いくつかのメールクライアントが外部スタイルの問題を抱えているため、HTMLメールを送るときは、すべてのスタイルがインラインでなければなりません。しかしながら、これはメンテンナンスを困難にし、コードの重複にもつながります。スタイルを変換し、それを対応するHTMLタグに挿入するための、2つの同じようなgemがあります。[premailer-rails3](https://github.com/fphilipe/premailer-rails3) と [roadie](https://github.com/Mange/roadie) です。
-* ページレスポンスを生成する間にメールを送ることは避けるべきです。ページの読み込みに遅延が発生しますし、もし複数のメールが送信されるのなら、リクエストがタイムアウトする場合があります。これを克服するためには、[delayed_job](https://github.com/tobi/delayed_job) gemの助けを借りてバックグラウンドプロセスで送信します。
+* いくつかのメールクライアントが外部スタイルの問題を抱えているため、HTMLメールを送るときは、すべてのスタイルがインラインでなければなりません。しかしながら、これはメンテンナンスを困難にし、コードの重複にもつながります。スタイルを変換し、それを対応するHTMLタグに挿入するための、2つの同じようなgemがあります。[premailer-rails](https://github.com/fphilipe/premailer-rails3) と [roadie](https://github.com/Mange/roadie) です。
+* ページレスポンスを生成する間にメールを送ることは避けるべきです。ページの読み込みに遅延が発生しますし、もし複数のメールが送信されるのなら、リクエストがタイムアウトする場合があります。これを克服するためには、[sidekiq](https://github.com/mperham/sidekiq) gemの助けを借りてバックグラウンドプロセスで送信します。
 
 ## Bundler
 
@@ -551,23 +579,27 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 最も重要なプログラミングの法則の1つはこうです。「車輪を再発明するな！」。あるタスクに直面した時には、自分のものを広げる前に、常に既存の解決策を見つけるために周りを見回すべきです。ここにあるリストは、多くのRailsプロジェクトに役立つ「有用な」gemです。(すべてRails 3.1準拠)
 
 * [active_admin](https://github.com/gregbell/active_admin) - ActiveAdminがあれば、Railsアプリにおける管理者インタフェースの作成は子供の遊びのようなものです。素敵なダッシュボード、CRUD UI、その他いろいろ。とても柔軟でカスタマイズ可能です。
+* [better_errors](https://github.com/charliesome/better_errors) - Better ErrorsはRailsのエラーページをより良く有益なページに取り替えます。Rackミドルウェアとして、Railsの外で使用できます。
+* [bullet](https://github.com/flyerhzm/bullet) - The Bulletは、アプリケーションが作るクエリの数を減らすことによって、パフォーマンス向上に役立つように設計されています。あなたがアプリケーションを開発している間、一括読み込み(N+1クエリ)をいつ加えなければならないか、また、いつ必要でない一括読み込みを使用するか、いつカウンタキャッシュを使用しなければならないかを通知します。
+* [cancan](https://github.com/ryanb/cancan) - CanCanは、リソースへのユーザーのアクセスを制限させることができる認証gemです。べての権限は、単一のファイル（ability.rb）で定義され、アクセス権をチェックし確保するための便利な方法は、アプリケーション全体で利用できます。
 * [capybara](https://github.com/jnicklas/capybara) - Capybaraは、Rails、Sinatra、MerbのようなRackアプリケーションにおける統合テストのプロセスを単純化することを目標としています。CapybaraはリアルユーザーのWebアプリケーションとの対話をシミュレートします。それはテストを実行するドライバーに関して不可知論者で、Rack::Testに付属し、Seleniumをビルトインでサポートしています。HtmlUnit、WebKit、env.jsは外部gemによってサポートされます。RSpecとCucmberとのコンビネーションで素晴らしい仕事をします。
 * [carrierwave](https://github.com/jnicklas/carrierwave) - Railsにおける究極のファイルアップロードソリューション。アップロードファイルはローカルと、クラウドストレージの両方をサポートします。画像の後処理のためにImageMagickと素晴らしく統合します。
-* [client_side_validations](https://github.com/bcardarella/client_side_validations) - サーバーサイドの既存のモデルバリデーションから、自動的にJavaScriptクライアントサイドバリデーションを生成する、素晴らしいgemです。非常にお勧めします！
 * [compass-rails](https://github.com/chriseppstein/compass) - いくつかのCSSフレームワークのサポートを追加する、素晴らしいgem。CSSファイルのコードが削減され、ブラウザ非互換性との戦いを助けるsaas mixinsのコレクションが含まれています。
 * [cucumber-rails](https://github.com/cucumber/cucumber-rails) - Cucumber はRubyで機能テストを開発するプレミアムツールです。cucumber-railsは、RailsへのCucumberの統合を提供します。
 * [devise](https://github.com/plataformatec/devise) - Deviseは、Railsアプリケーションのフル機能の認証ソリューションです。 カスタム認証ソリューションを展開するほとんどの場合、Deviseの使用が適しています。
 * [fabrication](http://fabricationgem.org/) - 素晴らしいfixtureの代替 (editor's choice).
 * [factory_girl](https://github.com/thoughtbot/factory_girl) - fabricationの代わり。とても成熟したfixtureの代替です。fabricationの精神を持っています。
-* [faker](http://faker.rubyforge.org/) - ダミーデータを生成する手軽なgem。(氏名、住所、その他)
+* [ffaker](https://github.com/EmmanuelOga/ffaker) - ダミーデータを生成する手軽なgem。(氏名、住所、その他)
 * [feedzirra](https://github.com/pauldix/feedzirra) - とても高速で柔軟なRSS/Atomフィードのパーサー。
 * [friendly_id](https://github.com/norman/friendly_id) - モデルのIDの代わりに記述的な属性を使って、人間が読めるURLを生成します
+* [globalize](https://github.com/globalize/globalize) - ActiveRecordのモデル/データ変換のためのRails国際化のデファクトスタンダードのライブラリです。Railsのグローバル化とActiveRecordのバージョン4.xを対象としています。これは、Ruby on Railsの新しいI18n APIと互換性があり、ActiveRecordのためのモデルの変換が追加されます。ActiveRecord 3.xのユーザーは、[3-0-stable branch](https://github.com/globalize/globalize/tree/3-0-stable) を確認してください。
 * [guard](https://github.com/guard/guard) - ファイルの変更を監視し、それに基づいたタスクを起動する、素晴らしいgemです。多くの有用な拡張が載せられました。自動テストとwatchrよりはるかに優れています。
 * [haml-rails](https://github.com/indirect/haml-rails) - haml-railsは、HamlのRailsへの統合を提供します。
 * [haml](http://haml-lang.com) - HAMLは簡潔なテンプレート言語で、多くの人に (あなたも含まれます) Erbよりはるかに優れいていると考えられています。
 * [kaminari](https://github.com/amatsuda/kaminari) - 素晴らしいページングソリューション。
 * [machinist](https://github.com/notahat/machinist) - fixtureは楽しくありません。mechanistなら。
 * [rspec-rails](https://github.com/rspec/rspec-rails) - RSpecはTest::MiniTestの代替です。私はRSpecを十分に強く推奨することができません。rspec-railsは、RSpecのRailsへの統合を供給します。
+ [sidekiq](https://github.com/mperham/sidekiq) - SidekiqはRailsアプリでバックグラウンドジョブを実行するための、おそらく最も簡単で拡張性の高い方法です。
 * [simple_form](https://github.com/plataformatec/simple_form) - 一度simple_form (あるいはformtastic) を使用したならば、あなたは決してRailsのデフォルト形式に関して聞かされたくありません。フォームを構築するためにマークアップに対して文句のない素晴らしいDSLを持っています。
 * [simplecov-rcov](https://github.com/fguillen/simplecov-rcov) - SimpleCovのためのRCovフォーマッタ。Hudsonのcontininousな統合サーバーとSimpleCovを使用しようとしているなら有用です。
 * [simplecov](https://github.com/colszowka/simplecov) - コードカバレッジツール。RCovと異なり、Ruby 1.9と完全に互換性をもちます。素晴らしいレポートを生成します。必携!
@@ -582,9 +614,9 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 これは問題があるか、他のgemによって取って代わられるgemのリストです。プロジェクトの中でこれらを使用しないようにするべきです。
 
 * [rmagick](http://rmagick.rubyforge.org/) - このgemはメモリ消費で悪名高い。代わりに [minimagick](https://github.com/probablycorey/mini_magick) を使用してください。
-* [autotest](http://www.zenspider.com/ZSS/Products/ZenTest/) - テストを自動的に実行するための古いソリューションです。guard と [watchr](https://github.com/mynyml/watchr) よりも遥かに劣っています。
+* [autotest](http://www.zenspider.com/ZSS/Products/ZenTest/) - テストを自動的に実行するための古いソリューションです。 [guard](https://github.com/guard/guard) と [watchr](https://github.com/mynyml/watchr) よりも遥かに劣っています。
 * [rcov](https://github.com/relevance/rcov) - コードカバレッジツールです。Ruby 1.9と互換性がありません。[SimpleCov](https://github.com/colszowka/simplecov) を使用してください。
-* [therubyracer](https://github.com/cowboyd/therubyracer) - 非常に大量のメモリを使用するので、本番環境でのこのgemの使用には強く反対します。[Mustang](https://github.com/nu7hatch/mustang) の利用を提案します。
+* [therubyracer](https://github.com/cowboyd/therubyracer) - 非常に大量のメモリを使用するので、本番環境でのこのgemの使用には強く反対します。`node.js`の利用を提案します。
 
 このリストは作成途中です。他にもポピュラーであるが欠陥のあるgemを知っていれば教えてください。
 
@@ -683,25 +715,6 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     end
     ```
 
-* シナリオのDRYを保つために、複合ステップを使用してください。
-
-    ```Ruby
-    # ...
-    When I subscribe for news from the category "Technical News"
-    # ...
-
-    # the step:
-    When /^I subscribe for news from the category "([^"]*)"$/ do |category|
-      steps %Q{
-        When I go to the news categories page
-        And I select the category #{category}
-        And I click the button "Subscribe for this category"
-        And I confirm the subscription
-      }
-    end
-    ```
-* 常にshould_not肯定の代わりにCapybaraの否定マッチャーを使用してください。Ajaxアクションをテストすることを可能にし、指定されたタイムアウトでマッチングの再試行を行います。[さらに多くの説明は、CapybaraのREADMEを参照してください。](https://github.com/jnicklas/capybara)
-
 ## <a name="rspec"> RSpec
 
 * exampleごとに1つの期待値だけを使用してください。
@@ -759,12 +772,12 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     end
 
     # the spec...
-    describe Article
-      describe '#summary'
+    describe Article do
+      describe '#summary' do
         #...
       end
 
-      describe '.latest'
+      describe '.latest' do
         #...
       end
     end
@@ -847,6 +860,43 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     end
     ```
 
+* 他の多くのテストで共有することができるspecグループを作成したい場合は、`shared_examples`を使用してください。
+
+   ```Ruby
+   # 悪い
+    describe Array do
+      subject { Array.new [7, 2, 4] }
+
+      context "initialized with 3 items" do
+        its(:size) { should eq(3) }
+      end
+    end
+
+    describe Set do
+      subject { Set.new [7, 2, 4] }
+
+      context "initialized with 3 items" do
+        its(:size) { should eq(3) }
+      end
+    end
+
+   # 良い
+    shared_examples "a collection" do
+      subject { described_class.new([7, 2, 4]) }
+
+      context "initialized with 3 items" do
+        its(:size) { should eq(3) }
+      end
+    end
+
+    describe Array do
+      it_behaves_like "a collection"
+    end
+
+    describe Set do
+      it_behaves_like "a collection"
+    end
+
 ### ビュー
 
 * ビューのspec`spec/views`のディレクトリ構造は、`app/views`の中のものと一致します。
@@ -912,7 +962,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
     # spec/views/articles/show.html.haml_spec.rb
     describe 'articles/show.html.haml' do
-      it 'displays the formatted date of article publishing'
+      it 'displays the formatted date of article publishing' do
         article = mock_model(Article, published_at: Date.new(2012, 01, 01))
         assign(:article, article)
 
@@ -1027,7 +1077,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 * 重複を避けるために、specにすべてのexampleのためのモデルを作成してください。
 
     ```Ruby
-    describe Article
+    describe Article do
       let(:article) { Fabricate(:article) }
     end
     ```
@@ -1035,7 +1085,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 * 作ったモデルが有効であることを保証するexampleを加えてください。
 
     ```Ruby
-    describe Article
+    describe Article do
       it 'is valid with valid attributes' do
         article.should be_valid
       end
@@ -1046,7 +1096,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 
     ```Ruby
     # 悪い
-    describe '#title'
+    describe '#title' do
       it 'is required' do
         article.title = nil
         article.should_not be_valid
@@ -1054,7 +1104,7 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
     end
 
     # 好ましい
-    describe '#title'
+    describe '#title' do
       it 'is required' do
         article.title = nil
         article.should have(1).error_on(:title)
@@ -1065,8 +1115,8 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 * バリデーションされる各属性ごとに個別の`describe`を追加してください。
 
     ```Ruby
-    describe Article
-      describe '#title'
+    describe Article do
+      describe '#title' do
         it 'is required' do
           article.title = nil
           article.should have(1).error_on(:title)
@@ -1093,15 +1143,15 @@ Railsは信念の強いフレームワークです。そしてこれは信念の
 Mailer specの中のモデルはモックされるべきです。Mailerはモデル生成に依存するべきではありません。
 * Mailer specは以下のことを確認する必要があります：
   * 見出しが正しい。
-  * 受取人のE-mailアドレスが正しい。
-  * メールが正しいE-mailアドレスに送信された。
+  * 送信者のE-mailアドレスが正しい。
+  * 受信者のE-mailアドレスが正しく記載されている。
   * メールには必要な情報が含まれている。
 
      ```Ruby
-     describe SubscriberMailer
+     describe SubscriberMailer do
        let(:subscriber) { mock_model(Subscription, email: 'johndoe@test.com', name: 'John Doe') }
 
-       describe 'successful registration email'
+       describe 'successful registration email' do
          subject { SubscriptionMailer.successful_registration_email(subscriber) }
 
          its(:subject) { should == 'Successful Registration!' }
@@ -1165,9 +1215,11 @@ Mailer specの中のモデルはモックされるべきです。Mailerはモデ
 
 Railsのスタイルには優れたリソースがあります。時間があるなら検討してみてください。
 
-* [The Rails 3 Way](http://tr3w.com/)
+* [The Rails 3 Way](http://www.amazon.com/Rails-Way-Addison-Wesley-Professional-Ruby/dp/0321601661)
 * [Ruby on Rails Guides](http://guides.rubyonrails.org/)
 * [The RSpec Book](http://pragprog.com/book/achbd/the-rspec-book)
+* [The Cucumber Book](http://pragprog.com/book/hwcuc/the-cucumber-book)
+* [Everyday Rails Testing with RSpec](https://leanpub.com/everydayrailsrspec)
 
 # 貢献
 
@@ -1175,6 +1227,14 @@ Railsのスタイルには優れたリソースがあります。時間がある
 
 改善のためにチケットやPull Requestを自由に送ってください。あなたの助力に感謝します！
 
+# ライセンス
+
+![Creative Commons License](http://i.creativecommons.org/l/by/3.0/88x31.png)
+This work is licensed under a [Creative Commons Attribution 3.0 Unported License](http://creativecommons.org/licenses/by/3.0/deed.en_US)
+
 # Spread the Word
 
 コミュニティー駆動のスタイルガイドは、その存在を知らないコミュニティーにほとんど役に立ちません。ガイドに関してツイートして、友達や同僚と共有してください。私たちが得るすべてのコメントや提案、意見はガイドをわずかにより良くします。そして私たちはできるだけ最良のガイドを持ちたいですよね。
+
+乾杯！<br/>
+[Bozhidar](https://twitter.com/bbatsov)
